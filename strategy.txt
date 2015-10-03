@@ -24,3 +24,8 @@ Points:
 	Bonus
 		opponent hit, etc.
 
+
+Pathfinding:
+	Walls: 
+		wall
+		

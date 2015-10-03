@@ -21,6 +21,7 @@ public class PlayerAI extends ClientAI {
 	public Move getMove(Gameboard gameboard, Opponent opponent, Player player) throws NoItemException, MapOutOfBoundsException {
 
         Move nextMove = moveQueue.remove();
+        System.out.println(nextMove);
 		//Write your AI here
 		return nextMove;
 	}
