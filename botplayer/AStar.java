@@ -1,7 +1,5 @@
 import com.orbischallenge.engine.gameboard.*;
-import com.orbischallenge.engine.gameboard.Gameboard;
 import com.orbischallenge.game.enums.*;
-import com.orbischallenge.game.enums.Move;
 import sun.reflect.generics.tree.Tree;
 
 import java.awt.*;
@@ -11,27 +9,43 @@ import java.util.List;
 public class AStar {
     private Queue<Move> moveQueue;
     private Heuristic heuristic;
+    private List<Point> obstacles;
 
-    public AStar(Heuristic heuristic){
+    public AStar(Heuristic heuristic, Gameboard gameboard){
         this.heuristic = heuristic;
         moveQueue = new ArrayDeque<>();
     }
 
-    public AStar(Heuristic heuristic, Queue<Move> moveQueue){
+    public AStar(Heuristic heuristic, Queue<Move> moveQueue, Gameboard gameboard){
         this.heuristic = heuristic;
         this.moveQueue = moveQueue;
     }
 
+    public void setupObstacles(Gameboard gameboard){
+        obstacles.clear();
+        List<Turret> turrets = gameboard.getTurrets();
+        List<Wall> walls = gameboard.getWalls();
+
+        for(Turret turret : turrets){
+            obstacles.add(new Point(turret.x, turret.y));
+        }
+
+        for(Wall wall : walls){
+            obstacles.add(new Point(wall.x, wall.y));
+        }
+    }
+
     /**
-     * Uses A* to find a path from A to B. Ignores bullets, players and lasers.
+     * Uses A* to find a path from A to B. Ignores bullets, players and lasers,
+     * and anything else dynamic.
      *
      * @param start
      * @param end
-     * @param gameboard
+     * @param board
      */
-    public void findPath(Point start, Point end, Gameboard gameboard){
+    public void findPath(Point start, Point end, Gameboard board){
         Node startNode = new Node(start.x, start.y, false, 0, false, true, false);
-        
+
         PriorityQueue<Node> openSet = new PriorityQueue<>();
         List<Node> closedSet = new ArrayList<>();
 
