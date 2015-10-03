@@ -30,7 +30,12 @@ public class AStar {
      * @param gameboard
      */
     public void findPath(Point start, Point end, Gameboard gameboard){
-        PriorityQueue<>
+        Node startNode = new Node(start.x, start.y, false, 0, false, true, false);
+        
+        PriorityQueue<Node> openSet = new PriorityQueue<>();
+        List<Node> closedSet = new ArrayList<>();
+
+        openSet.add(startNode);
     }
 
     private List<Move> getMoves(){
@@ -43,10 +48,38 @@ public class AStar {
         private boolean visited;
         private float distanceFromStart;
         private float heuristicDistanceFromGoal;
-        private Point coords;
+        private int x;
+        private int y;
         private boolean isObstacle;
         private boolean isStart;
         private boolean isGoal;
+
+        private Node north;
+        private Node south;
+        private Node east;
+        private Node west;
+
+        public Node(int x, int y){
+            neighbours = new ArrayList<>();
+            this.x = x;
+            this.y = y;
+            visited = false;
+            distanceFromStart = Integer.MAX_VALUE;
+            isObstacle = false;
+            isStart = false;
+            isGoal = false;
+        }
+
+        public Node(int x, int y, boolean visited, int distanceFromStart, boolean isObstacle, boolean isStart, boolean isGoal) {
+            neighbours = new ArrayList<>();
+            this.x = x;
+            this.y = y;
+            this.visited = visited;
+            this.distanceFromStart = distanceFromStart;
+            this.isObstacle = isObstacle;
+            this.isStart = isStart;
+            this.isGoal = isGoal;
+        }
 
         public int compareTo(Node other){
             float thisTotalDistanceFromGoal = heuristicDistanceFromGoal + distanceFromStart;
@@ -59,6 +92,58 @@ public class AStar {
             } else {
                 return 0;
             }
+        }
+
+        public Node getNorth() {
+            return north;
+        }
+
+        public void setNorth(Node north) {
+            // replace old node in the neighbours list
+            if(neighbours.contains(north))
+                neighbours.remove(north);
+            neighbours.add(north);
+
+            this.north = north;
+        }
+
+        public Node getSouth() {
+            return south;
+        }
+
+        public void setSouth(Node south) {
+            // replace old node in the neighbours list
+            if(neighbours.contains(south))
+                neighbours.remove(south);
+            neighbours.add(south);
+
+            this.south = south;
+        }
+
+        public Node getEast() {
+            return east;
+        }
+
+        public void setEast(Node east) {
+            // replace old node in the neighbours list
+            if(neighbours.contains(east))
+                neighbours.remove(east);
+            neighbours.add(east);
+
+            this.east = east;
+        }
+
+        public Node getWest() {
+            return west;
+        }
+
+        public void setWest(Node west) {
+            // replace old node in the neighbours list
+            if(neighbours.contains(west))
+                neighbours.remove(west);
+            neighbours.add(west);
+
+            this.west = west;
         }
 
         /**
@@ -105,12 +190,29 @@ public class AStar {
             this.heuristicDistanceFromGoal = heuristicDistanceFromGoal;
         }
 
-        public Point getCoords() {
-            return coords;
+        public int getX(){
+            return x;
         }
 
-        public void setCoords(Point coords) {
-            this.coords = coords;
+        public void setX(int x){
+            this.x = x;
+        }
+
+        public int getY(){
+            return y;
+        }
+
+        public void setY(int y){
+            this.y = y;
+        }
+
+        public void setCoords(Point point){
+            x = point.x;
+            y = point.y;
+        }
+
+        public Point getCoords(){
+            return new Point(x, y);
         }
 
         public boolean isObstacle() {
