@@ -25,7 +25,12 @@ public class AStar {
         setupObstacles(gameboard);
         map = new ArrayList<>();
 
-        
+        for(int i = 0; i < gameboard.getWidth()){
+            List<Node> columns = new ArrayList<>();
+            for(int ii = 0; i < gameboard.getHeight(); i++){
+                columns.add(new Node(i, ii, false, 0, isObstacle(new Point(i, ii)), false, false));
+            }
+        }
     }
 
     private void setupObstacles(Gameboard gameboard){
@@ -50,17 +55,62 @@ public class AStar {
         return false;
     }
 
-    public List<Point> findNeighbours(Node node, Direction direction, int width, int height){
-        List<Point> neighbours = new ArrayList<>();
+
+    /**
+     * Returns all valid (non-obstacle) neighbours of the given node.
+     *
+     * @param node
+     * @param width
+     * @param height
+     * @return
+     */
+    public List<Node> findNeighbours(Node node, int width, int height){
+        List<Node> neighbours = new ArrayList<>();
         final int x = node.getX();
         final int y = node.getY();
 
         int newX = x - 1;
 
-        Point west = new Point(newX, y);
+        // wraparound test
+        if(newX < 0)
+            newX = width - 1;
 
-        if(!isObstacle(west))
+        Node west = map.get(newX).get(y);
 
+        int newY = y - 1;
+
+        // wraparound test
+        if(newY < 0)
+            newY = height - 1;
+
+        Node north = map.get(newX).get(newY);
+
+        newX = x + 1;
+
+        // wraparound test
+        if(newX >= width)
+            newX = 0;
+
+        Node east = map.get(newX).get(y);
+
+        newY = y + 1;
+
+        if(newY >= height)
+            newY = 0;
+
+        Node south = map.get(x).get(newY);
+
+        //if(!north.isObstacle())
+            neighbours.add(north);
+        //if(!south.isObstacle())
+            neighbours.add(south);
+        //if(!east.isObstacle())
+            neighbours.add(east);
+        //if(!west.isObstacle())
+            neighbours.add(west);
+
+
+        return neighbours;
     }
 
     public boolean isInClosedSet(Node node){
@@ -68,6 +118,47 @@ public class AStar {
             if(node.equals(current))
                 return true;
         }
+        return false;
+    }
+
+    public boolean isFacing(Direction direction, Point source, Point target, int width, int height){
+        if(source.x != target.x){
+            // checking above
+            if(source.y == 0 && target.y == height - 1){
+                return true;
+            }
+            else if(source.y > target.y){
+                return true;
+            }
+        }
+        else if(direction == Direction.DOWN){
+            // checking below
+            if(source.y == height - 1 && target.y == 0){
+                return true;
+            }
+            else if(source.y < target.y){
+                return true;
+            }
+
+        }
+        // TODO check AAAAA
+        else if(direction == Direction.LEFT){
+            // checking left
+            if(source.x == 0 && target.x == width - 1)
+                return true;
+
+            else if(source.x > target.x)
+                return true;
+
+        }
+        else if(direction == Direction.RIGHT){
+            // checking right
+            if(source.x == width - 1 && target.x == 0)
+                return true;
+            else if(source.x < target.x)
+                return true;
+        }
+
         return false;
     }
 
@@ -80,6 +171,8 @@ public class AStar {
      * @param board
      */
     public void findPath(Point start, Point end, Gameboard board, Direction initialDirection){
+        int width = board.getWidth();
+        int height = board.getHeight();
         Node startNode = new Node(start.x, start.y, false, 0, false, true, false);
         openSet.clear();
         closedSet.clear();
@@ -92,10 +185,18 @@ public class AStar {
             Node current = openSet.remove();
             closedSet.add(current);
 
+            List<Node> neighbours = findNeighbours(current, width, height);
 
+            for(Node neighbour : neighbours){
+                // skip. we've been here before
+                if(closedSet.contains(neighbour))
+                    continue;
 
-            for(Node neighbour : current.getNeighbours()){
-                float cost =  neighbour.getHeuristicDistanceFromGoal();
+                if(!neighbour.isObstacle()){
+                    // calculate the cost to get to this neighbour in our tenative path
+                    int cost = current.getDistanceFromStart() + isFacing() ? 1 : 2;
+                }
+
             }
 
         }
@@ -337,7 +438,7 @@ public class AStar {
             int dx_wrap = width - 1 - dx_normal;
             int dy_wrap = height - 1 - dy_normal;
 
-            return Math.min(dx_normal, dx_wrap) + min(dy_normal, dy_wrap);
+            return Math.min(dx_normal, dx_wrap) + min(dy_normal, dy_wrap) + 1; // + 1 due to the turning required
 		}
 	}
 }
