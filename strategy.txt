@@ -1,0 +1,26 @@
+0. NOT DIE
+1. collect powerups
+2. destroy turrets
+3. eliminate opponents
+
+Power ups
+	Laser
+	Shield
+	Teleport
+	<teleport pad>
+
+has wrap around
+
+Obstacles:
+	Wall (indestructable)
+	Turret (shoots lasers until disabled)
+	Dead turret (disabled by player; grants points)
+
+Points: 
+	Win (opponent dies)			2500
+	Draw (everyone survives)	1000
+	Loss (you die)				0
+
+	Bonus
+		opponent hit, etc.
+
