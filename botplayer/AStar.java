@@ -1,6 +1,7 @@
 import com.orbischallenge.engine.gameboard.*;
 
 import java.awt.*;
+import java.lang.Math.*;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -20,7 +21,8 @@ public class AStar {
             int width = board.getWidth();
             int height = board.getHeight();
 
-            
+            // calculate normal manhatten distance
+            int dx_normal = Math.abs(start.getX()- end.getX());
 
 			return 0;
 		}

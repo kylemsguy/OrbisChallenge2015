@@ -4,7 +4,7 @@ import java.util.*;
 import java.awt.Point;
 
 public class PlayerAI extends ClientAI {
-    private AStar pathfinder = new AStar();
+    //private AStar pathfinder = new AStar();
     private Queue<Move> moveQueue = new ArrayDeque<>();
 
 	public PlayerAI() {
