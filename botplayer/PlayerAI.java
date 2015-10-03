@@ -25,9 +25,10 @@ public class PlayerAI extends ClientAI {
 
     /* Problems:
     * 1. How do we randomize which teleport location we go to? Right now I put the default
-    * as TELEPORT_0, but what if it's more beneficial to go to anothe teleport location?
+    * as TELEPORT_0, but what if it's more beneficial to go to another teleport location?
     * 2. If we have no power ups and we're trying to escape, how do we determine if we need to face another direction
     * before moving, or if we can simply move forward.  I set that as Move.FACE_DOWN for now. */
+
 
     public void checkForOpponent() {
         if (opponent.laserCount() > 0 && inLineOfSight(opponent.getX(), player.getX())) {
@@ -50,6 +51,47 @@ public class PlayerAI extends ClientAI {
     }
 /* Helper Functions */
 
+    public boolean turretsOutOfRange() {
+        ArrayList turrets = gameboard.getTurrets();
+        int Xcoordinate = player.getX();
+        int Ycoordinate = player.getY();
+        int i;
+        boolean outOfRange = true;
+        for (i = 0; i < turrets.size(); i++) {
+            if (Math.abs(turrets[i].x - Xcoordinate < 5 || Math.abs(turrets[i].y - Ycoordinate < 5) {
+                outOfRange = false;
+                return outOfRange;
+            }
+        }
+
+        return outOfRange;
+
+    }
+
+    public ArrayList possibleMoves() {
+        int Xcoordinate = player.getX();
+        int Ycoordinate = player.getY();
+        ArrayList<String> directions = new ArrayList<String>(Arrays.asList("left", "right", "up", "down"));
+
+        if (isTurretAtTile(Xcoordinate + 1, Ycoordinate) || isWallAtTile(Xcoordinate + 1, Ycoordinate)) {
+            directions.remove("right");
+        }
+
+        if (isTurretAtTile(Xcoordinate -1, Ycoordinate) || isWallAtTile(Xcoordinate -1, Ycoordinate)) {
+            directions.remove("left");
+        }
+
+        if (isTurretAtTile(Xcoordinate, Ycoordinate + 1) || isWallAtTile(Xcoordinate, Ycoordinate + 1)) {
+            directions.remove("up");
+        }
+
+        if (isTurretAtTile(Xcoordinate, Ycoordinate - 1) || isWallAtTile(Xcoordinate, Ycoordinate - 1)) {
+            directions.remove("down");
+        }
+
+        return directions;
+    }
+
     public boolean inLineOfSight(int opponentY, int playerY) {
         if (opponentX == playerX) {
             return true;
@@ -63,7 +105,7 @@ public class PlayerAI extends ClientAI {
         }
         return false;
     }
-
+/* getNumberofTeleportLocations is actually already done in the gameboard class */
     public int getNumberOfTeleportLocations() {
         ArrayList TeleportLocations = gameboard.getTeleportLocations();
         int i;
