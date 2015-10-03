@@ -30,3 +30,10 @@ Pathfinding:
 		wall
 		turrets
 		laser beams
+	Path will update via the a* algorithm
+Check:
+	-When turret last fired. If we know when turret will fire, we will know not to 
+	move into the turret’s firing path (4 spaces) 
+	-
+	
+       
