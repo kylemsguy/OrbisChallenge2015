@@ -125,3 +125,5 @@ crashlytics-build.properties
 
 # Results folder for OrbisChallenge2015
 Results/
+
+.DS_Store
