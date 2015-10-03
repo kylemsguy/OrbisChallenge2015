@@ -11,6 +11,9 @@ public class AStar {
     private Heuristic heuristic;
     private List<Point> obstacles;
 
+    private PriorityQueue<Node> openSet = new PriorityQueue<>();
+    private List<Node> closedSet = new ArrayList<>();
+
     public AStar(Heuristic heuristic, Gameboard gameboard){
         this.heuristic = heuristic;
         moveQueue = new ArrayDeque<>();
@@ -43,13 +46,20 @@ public class AStar {
      * @param end
      * @param board
      */
-    public void findPath(Point start, Point end, Gameboard board){
+    public void findPath(Point start, Point end, Gameboard board, Direction initialDirection){
         Node startNode = new Node(start.x, start.y, false, 0, false, true, false);
-
-        PriorityQueue<Node> openSet = new PriorityQueue<>();
-        List<Node> closedSet = new ArrayList<>();
+        openSet.clear();
+        closedSet.clear();
 
         openSet.add(startNode);
+
+        // while we haven't reached the goal yet
+        while(openSet.size() > 0){
+            // get the best node from the open set
+            Node current = openSet.remove();
+            
+
+        }
     }
 
     private List<Move> getMoves(){
