@@ -9,19 +9,26 @@ import java.util.List;
 public class AStar {
     private Queue<Move> moveQueue;
     private Heuristic heuristic;
+    private List<List<Node>> map;
     private List<Point> obstacles;
 
-    public AStar(Heuristic heuristic, Gameboard gameboard){
-        this.heuristic = heuristic;
-        moveQueue = new ArrayDeque<>();
-    }
+    private PriorityQueue<Node> openSet = new PriorityQueue<>();
+    private List<Node> closedSet = new ArrayList<>();
+    private Direction currentDirection;
 
-    public AStar(Heuristic heuristic, Queue<Move> moveQueue, Gameboard gameboard){
+    public AStar(Heuristic heuristic, Queue<Move> moveQueue){
         this.heuristic = heuristic;
         this.moveQueue = moveQueue;
     }
 
-    public void setupObstacles(Gameboard gameboard){
+    public void setupMap(Gameboard gameboard){
+        setupObstacles(gameboard);
+        map = new ArrayList<>();
+
+        
+    }
+
+    private void setupObstacles(Gameboard gameboard){
         obstacles.clear();
         List<Turret> turrets = gameboard.getTurrets();
         List<Wall> walls = gameboard.getWalls();
@@ -35,6 +42,35 @@ public class AStar {
         }
     }
 
+    public boolean isObstacle(Point point){
+        for(Point obstacle : obstacles){
+            if(point.equals(obstacle))
+                return true;
+        }
+        return false;
+    }
+
+    public List<Point> findNeighbours(Node node, Direction direction, int width, int height){
+        List<Point> neighbours = new ArrayList<>();
+        final int x = node.getX();
+        final int y = node.getY();
+
+        int newX = x - 1;
+
+        Point west = new Point(newX, y);
+
+        if(!isObstacle(west))
+
+    }
+
+    public boolean isInClosedSet(Node node){
+        for(Node current : closedSet){
+            if(node.equals(current))
+                return true;
+        }
+        return false;
+    }
+
     /**
      * Uses A* to find a path from A to B. Ignores bullets, players and lasers,
      * and anything else dynamic.
@@ -43,13 +79,26 @@ public class AStar {
      * @param end
      * @param board
      */
-    public void findPath(Point start, Point end, Gameboard board){
+    public void findPath(Point start, Point end, Gameboard board, Direction initialDirection){
         Node startNode = new Node(start.x, start.y, false, 0, false, true, false);
-
-        PriorityQueue<Node> openSet = new PriorityQueue<>();
-        List<Node> closedSet = new ArrayList<>();
+        openSet.clear();
+        closedSet.clear();
 
         openSet.add(startNode);
+
+        // while we haven't reached the goal yet
+        while(openSet.size() > 0){
+            // get the best node from the open set
+            Node current = openSet.remove();
+            closedSet.add(current);
+
+
+
+            for(Node neighbour : current.getNeighbours()){
+                float cost =  neighbour.getHeuristicDistanceFromGoal();
+            }
+
+        }
     }
 
     private List<Move> getMoves(){
@@ -93,6 +142,16 @@ public class AStar {
             this.isObstacle = isObstacle;
             this.isStart = isStart;
             this.isGoal = isGoal;
+        }
+
+        @Override
+        public boolean equals(Object other){
+            if(other instanceof Node) {
+                Node otherNode = (Node) other;
+                if (this.x == otherNode.getX() && this.y == otherNode.getY())
+                    return true;
+            }
+            return false;
         }
 
         public int compareTo(Node other){
