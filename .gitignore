@@ -75,3 +75,5 @@ docs/_build/
 # PyBuilder
 target/
 
+# Results folder for OrbisChallenge2015
+Results/
