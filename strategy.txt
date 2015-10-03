@@ -28,4 +28,5 @@ Points:
 Pathfinding:
 	Walls: 
 		wall
-		
+		turrets
+		laser beams
