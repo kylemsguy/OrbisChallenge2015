@@ -169,7 +169,9 @@ public class AStar {
         return false;
     }
 
-    public Direction getFacing(Node source, Node target){
+    public Direction getFacing(Node source, Node target, Direction initialDirection){
+        if(source == null)
+            return initialDirection;
         if(source.x > target.x || (source.x == 0 && target.x == width - 1)){
             // facing left
             return Direction.LEFT;
@@ -216,7 +218,7 @@ public class AStar {
 
             // Check if we have reached the target. If so, we are done!
             if(end.equals(current.getCoords())){
-                reconstructPath(current, width, height);
+                reconstructPath(initialDirection, current);
             }
 
             List<Node> neighbours = findNeighbours(current);
@@ -228,7 +230,7 @@ public class AStar {
 
                 if(!neighbour.isObstacle()){
                     // calculate the cost to get to this neighbour in our tenative path
-                    Direction prevDirection = getFacing(current.getParent(), current);
+                    Direction prevDirection = getFacing(current.getParent(), current, initialDirection);
                     int cost = (int) current.getDistanceFromStart() +
                             (isFacing(prevDirection, current.getCoords(),
                                     neighbour.getCoords()) ? 1 : 2);
@@ -261,14 +263,47 @@ public class AStar {
      * Reconstructs the path and turns into a set of moves.
      * @param end
      */
-    private void reconstructPath(Node end){
+    private void reconstructPath(Direction initialDirection, Node end){
+        if(end.getParent() == null)
+            return;
         List<Move> moveList = new ArrayList<>();
         Node node = end;
-        Node parent;
+        Node parent = end.getParent();
+        Direction previousFacing = getFacing(parent, end, initialDirection);
+        Direction facing;
 
         while((parent = node.getParent()) != null){
-            getFacing(parent, node)
+            facing = getFacing(parent, node, initialDirection);
+            moveList.add(Move.FORWARD);
+            if(facing != previousFacing){
+                moveList.add(directionToMove(previousFacing));
+            }
+
+            // update pointers
+            node = parent;
+            previousFacing = facing;
         }
+
+        // Initial direction change
+        if(initialDirection != previousFacing){
+            moveList.add(directionToMove(previousFacing));
+        }
+
+        // Add the moves to the queue
+        for(int i = moveList.size() - 1; i >= 0; i--){
+            moveQueue.add(moveList.get(i));
+        }
+    }
+
+    private Move directionToMove(Direction direction){
+        if(direction == Direction.UP)
+            return Move.FACE_UP;
+        else if(direction == Direction.DOWN)
+            return Move.FACE_DOWN;
+        else if(direction == Direction.LEFT)
+            return Move.FACE_LEFT;
+        else
+            return Move.FACE_RIGHT;
     }
 
     public List<List<Node>> getMap(){
