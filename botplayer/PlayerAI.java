@@ -1,25 +1,23 @@
-import com.orbischallenge.engine.gameboard.*;
-import com.orbischallenge.game.client.gameObjects.*;
-import com.orbischallenge.game.enums.*;
-import com.orbischallenge.game.enums.Direction;
-
-import java.util.*;
 import java.awt.Point;
+import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Random;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 
 public class PlayerAI extends ClientAI {
-    //private AStar pathfinder = new AStar();
+    private AStar pathfinder;
     private ArrayDeque<Move> moveQueue = new ArrayDeque<>();
+    private AStar.Heuristic distanceManager = new AStar.ManhattenDistance();
 
 	public PlayerAI() {
 		//Write your initialization here
-
+        pathfinder = new AStar(distanceManager, moveQueue);
         moveQueue.add(Move.FACE_DOWN);
         moveQueue.add(Move.FORWARD);
         moveQueue.add(Move.FORWARD);
         moveQueue.add(Move.FORWARD);
         moveQueue.add(Move.FORWARD);
-        moveQueue.add(Move.LASER);
 
 	}
         /* Check if the opponent is in our line of sight and has any lasers. If these conditions
@@ -147,7 +145,7 @@ public class PlayerAI extends ClientAI {
 
 /* getNumberofTeleportLocations is actually already done in the gameboard class */
     public int getNumberOfTeleportLocations(Gameboard gameboard) {
-        ArrayList TeleportLocations = gameboard.getTeleportLocations();
+        List<Point> TeleportLocations = gameboard.getTeleportLocations();
         int numLocations = 0;
         for (int i = 0; i < TeleportLocations.size(); i++) {
             numLocations += 1;
@@ -195,6 +193,28 @@ public class PlayerAI extends ClientAI {
 
 	@Override
 	public Move getMove(Gameboard gameboard, Opponent opponent, Player player) throws NoItemException, MapOutOfBoundsException {
+        if(moveQueue.isEmpty()){
+            pathfinder.setupMap(gameboard);
+            // find closest powerup
+            List<PowerUp> powerUps = gameboard.getPowerUps();
+
+            Point currentMinPosition = null;
+            int currentMinDistance = Integer.MAX_VALUE;
+
+            Point playerPosition = new Point(player.x, player.y);
+
+            for(PowerUp powerUp : powerUps){
+                Point powerUpPosition = new Point(powerUp.x, powerUp.y);
+                if(currentMinPosition == null || distanceManager.getDistance(playerPosition, powerUpPosition,
+                        gameboard.getWidth(), gameboard.getHeight()) < currentMinDistance){
+                    currentMinPosition = powerUpPosition;
+                    currentMinDistance = distanceManager.getDistance(playerPosition, currentMinPosition,
+                            gameboard.getWidth(), gameboard.getHeight());
+                }
+            }
+
+            pathfinder.findPath(playerPosition, currentMinPosition, gameboard, player.getDirection());
+        }
 
         // Execute queue
         Move nextMove;

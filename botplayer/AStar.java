@@ -1,8 +1,3 @@
-import com.orbischallenge.engine.gameboard.*;
-import com.orbischallenge.game.enums.*;
-import com.orbischallenge.game.enums.Direction;
-import com.orbischallenge.game.enums.Move;
-
 import java.awt.*;
 import java.util.*;
 import java.util.List;
@@ -23,20 +18,27 @@ public class AStar {
     public AStar(Heuristic heuristic, Queue<Move> moveQueue){
         this.heuristic = heuristic;
         this.moveQueue = moveQueue;
+        this.obstacles = new ArrayList<>();
+    }
+
+    private int debugPrintcalls = 1;
+    private void debugPrint(){
+        System.out.println("Call number" + debugPrintcalls++);
     }
 
     public void setupMap(Gameboard gameboard){
+        if(map != null)
+            return;
         width = gameboard.getWidth();
         height = gameboard.getHeight();
-
         setupObstacles(gameboard);
         map = new ArrayList<>();
-
         for(int i = 0; i < gameboard.getWidth(); i++){
             List<Node> columns = new ArrayList<>();
-            for(int ii = 0; i < gameboard.getHeight(); i++){
+            for(int ii = 0; ii < gameboard.getHeight(); ii++){
                 columns.add(new Node(i, ii, false, 0, isObstacle(new Point(i, ii)), false, false));
             }
+            map.add(columns);
         }
     }
 
@@ -67,8 +69,6 @@ public class AStar {
      * Returns all valid (non-obstacle) neighbours of the given node.
      *
      * @param node
-     * @param width
-     * @param height
      * @return
      */
     public List<Node> findNeighbours(Node node){
@@ -130,7 +130,6 @@ public class AStar {
 
     public boolean isFacing(Direction direction, Point source, Point target){
         if(direction == Direction.UP){
-            System.out.println("Here1");
             // checking above
             if(source.y == 0 && target.y == height - 1){
                 return true;
@@ -186,7 +185,8 @@ public class AStar {
             return Direction.DOWN;
         }
         else{
-            System.out.println("SOMETHING HAS GONE TERRIBLY WRONG!");
+            System.err.println("SOMETHING HAS GONE TERRIBLY WRONG!");
+            return null;
         }
     }
 
@@ -274,7 +274,7 @@ public class AStar {
             facing = getFacing(parent, node, initialDirection);
             moveList.add(Move.FORWARD);
             if(facing != previousFacing){
-                moveList.add(directionToMove(previousFacing));
+                moveList.add(Direction.directionToMovement(previousFacing));
             }
 
             // update pointers
@@ -284,28 +284,24 @@ public class AStar {
 
         // Initial direction change
         if(initialDirection != previousFacing){
-            moveList.add(directionToMove(previousFacing));
+            moveList.add(Direction.directionToMovement(previousFacing));
         }
+
+        System.out.println("Printing new move plan: ");
 
         // Add the moves to the queue
         for(int i = moveList.size() - 1; i >= 0; i--){
             moveQueue.add(moveList.get(i));
+            System.out.println(moveList.get(i));
         }
-    }
-
-    private Move directionToMove(Direction direction){
-        if(direction == Direction.UP)
-            return Move.FACE_UP;
-        else if(direction == Direction.DOWN)
-            return Move.FACE_DOWN;
-        else if(direction == Direction.LEFT)
-            return Move.FACE_LEFT;
-        else
-            return Move.FACE_RIGHT;
     }
 
     public List<List<Node>> getMap(){
         return map;
+    }
+
+    public Heuristic getHeuristic(){
+        return this.heuristic;
     }
 
     public static class Node implements Comparable<Node>{
