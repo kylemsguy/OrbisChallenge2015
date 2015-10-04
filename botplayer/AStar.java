@@ -2,7 +2,6 @@ import com.orbischallenge.engine.gameboard.*;
 import com.orbischallenge.game.enums.*;
 import com.orbischallenge.game.enums.Direction;
 import com.orbischallenge.game.enums.Move;
-import sun.reflect.generics.tree.Tree;
 
 import java.awt.*;
 import java.util.*;
@@ -183,7 +182,7 @@ public class AStar {
             // facing up
             return Direction.UP;
         }
-        else if(source.y < target.y || (source.y == height.y - 1 && target.y = 0)){
+        else if(source.y < target.y || (source.y == height - 1 && target.y == 0)){
             return Direction.DOWN;
         }
         else{
