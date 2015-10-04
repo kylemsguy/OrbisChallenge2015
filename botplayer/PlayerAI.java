@@ -10,6 +10,9 @@ public class PlayerAI extends ClientAI {
     private ArrayDeque<Move> moveQueue = new ArrayDeque<>();
     private AStar.Heuristic distanceManager = new AStar.ManhattenDistance();
 
+    private Move previousMove;
+    private boolean killTurretMode;
+
 	public PlayerAI() {
 		//Write your initialization here
         pathfinder = new AStar(distanceManager, moveQueue);
@@ -32,30 +35,64 @@ public class PlayerAI extends ClientAI {
     * before moving, or if we can simply move forward.  I set that as Move.FACE_DOWN for now. */
 
 
-    public void checkForOpponent(Player player, Opponent opponent) {
+    public Move checkForOpponent(Player player, Opponent opponent, Gameboard gameboard, Move oldMove) {
+        Move move = oldMove;
         if (opponent.getLaserCount() > 0 && inLineOfSight(player.getX(), player.getY(), opponent.getX(), opponent.getY())) {
             if (player.getShieldCount() > 0) {
-                moveQueue.add(Move.SHIELD);
+                move = Move.SHIELD;
 
             } else if (player.getTeleportCount() > 0 && player.getShieldCount() == 0) {
-                moveQueue.add(Move.TELEPORT_0);
+                Move nextMove = Move.FORWARD;
+                moveQueue.clear();
+                Random random = new Random();
+                int numTeleports = gameboard.numberOfTeleportLocations();
+                int teleportLocation = random.nextInt(numTeleports);
+
+                switch (teleportLocation){
+                    case 0:
+                        nextMove = Move.TELEPORT_0;
+                        break;
+                    case 1:
+                        nextMove = Move.TELEPORT_1;
+                        break;
+                    case 2:
+                        nextMove = Move.TELEPORT_2;
+                        break;
+                    case 3:
+                        nextMove = Move.TELEPORT_3;
+                        break;
+                    case 4:
+                        nextMove = Move.TELEPORT_4;
+                        break;
+                    case 5:
+                        nextMove = Move.TELEPORT_5;
+                        break;
+                }
+                move = nextMove;
             } else {
                 if (inRange(opponent.getY(), player.getY())) {
-                    moveQueue.add(Move.SHOOT);
-                } else {
-                    if (inLineOfSight(player.getX(), player.getY(), opponent.getX(), opponent.getY())) {
-                        moveQueue.add(Move.FACE_DOWN);
-                        moveQueue.add(Move.FORWARD);
-                    }
+                    move = Move.SHOOT;
                 }
             }
         }
+        return move;
     }
 
-    public Move chooseRandomDirection(int maximum, int minimum) {
+    public Move chooseRandomDirection() {
         Random rn = new Random();
-        int directionNum = rn.nextInt(maximum - minimum + 1) + minimum;
-
+        int directionNum = rn.nextInt(4);
+        if (directionNum == 0) {
+            return Move.FACE_UP;
+        }
+        if (directionNum == 1) {
+            return Move.FACE_DOWN;
+        }
+        if (directionNum == 2) {
+            return Move.FACE_LEFT;
+        }
+        if (directionNum == 3) {
+            return Move.FACE_RIGHT;
+        }
         return Move.NONE;
     }
 
@@ -191,10 +228,48 @@ public class PlayerAI extends ClientAI {
         return false;  // TODO implement
     }
 
+    public Point getPositionFromMove(Point start, Move move, Direction facing){
+        AStar.GameGrid grid = pathfinder.getMap();
+        Point next = start;
+        AStar.Node node = null;
+        switch(move){
+            case FORWARD: {
+                switch (facing){
+                    case UP:
+                        node = grid.at(start.x, start.y-1);
+                        if(!node.isObstacle())
+                            next = node.getCoords();
+                        break;
+                    case DOWN:
+                        node = grid.at(start.x, start.y+1);
+                        if(!node.isObstacle())
+                            next = node.getCoords();
+                        break;
+                    case LEFT:
+                        node = grid.at(start.x-1, start.y);
+                        if(!node.isObstacle())
+                            next = node.getCoords();
+                        break;
+                    case RIGHT:
+                        node = grid.at(start.x+1, start.y);
+                        if(!node.isObstacle())
+                            next = node.getCoords();
+                        break;
+                }
+            }
+            break;
+        }
+        return next;
+    }
+
+    private void killTurret(){
+
+    }
+
 	@Override
 	public Move getMove(Gameboard gameboard, Opponent opponent, Player player) throws NoItemException, MapOutOfBoundsException {
+        pathfinder.setupMap(gameboard);
         if(moveQueue.isEmpty()){
-            pathfinder.setupMap(gameboard);
             pathfinder.updateTurrets(gameboard);
             // find closest powerup
             List<PowerUp> powerUps = gameboard.getPowerUps();
@@ -225,8 +300,85 @@ public class PlayerAI extends ClientAI {
             nextMove = Move.NONE;
             System.err.println("Empty Queue");
         }
+
+        // check for opponent
+        nextMove = checkForOpponent(player, opponent, gameboard, nextMove);
+
+        // process move
+        Point nextPosition = getPositionFromMove(new Point(player.x, player.y), nextMove, player.getDirection());
+        if(pathfinder.isDangerous(nextPosition, gameboard) == 1){
+            Move peekMove = moveQueue.peek();
+            if(peekMove != Move.FORWARD){
+                // DANGER DANGER YOU WILL DIE WAIT A TURN
+                if(nextMove == Move.FORWARD){
+                    moveQueue.addFirst(nextMove);
+                    nextMove = Move.NONE;
+                }
+                else {
+                    // take evasive action before you die
+                    if(player.getShieldCount() > 0){
+                        moveQueue.addFirst(nextMove);
+                        nextMove = Move.SHIELD;
+                    }
+                    else if(player.getTeleportCount() > 0){
+                        moveQueue.clear();
+                        Random random = new Random();
+                        int numTeleports = gameboard.numberOfTeleportLocations();
+                        int teleportLocation = random.nextInt(numTeleports);
+
+                        switch (teleportLocation){
+                            case 0:
+                                nextMove = Move.TELEPORT_0;
+                                break;
+                            case 1:
+                                nextMove = Move.TELEPORT_1;
+                                break;
+                            case 2:
+                                nextMove = Move.TELEPORT_2;
+                                break;
+                            case 3:
+                                nextMove = Move.TELEPORT_3;
+                                break;
+                            case 4:
+                                nextMove = Move.TELEPORT_4;
+                                break;
+                            case 5:
+                                nextMove = Move.TELEPORT_5;
+                                break;
+                        }
+                    }
+                    else{
+                        moveQueue.clear();
+                        // find a free space and turn in that direction and push forward on front of queue
+                        Direction direction = player.getDirection();
+                        nextMove = null;
+                        int dx = player.x + (direction == Direction.LEFT ? -1 : 0) +
+                                (direction == Direction.RIGHT ? 1 : 0);
+                        int dy = player.y + (direction == Direction.UP ? -1 : 0) +
+                                (direction == Direction.LEFT ? 1 : 0);
+                        AStar.Node node = pathfinder.getMap().at(dx, dy);
+                        if (!pathfinder.isObstacle(node.getCoords())) {
+                            nextMove = Move.FORWARD;
+                        } else {
+                            // turn in a random direction
+                            //nextMove = chooseRandomDirection();
+                            nextMove = Move.SHOOT;
+                        }
+                    }
+                }
+            }
+        }
+
         System.out.println(nextMove);
 		//Write your AI here
 		return nextMove;
 	}
+
+    /*
+        1. If no queue, pathfind to nearest powerup
+        2. If queue, dequeue next step, determine if dangerous
+        2a. if danger == 1, peek at next move. If == Move.FORWARD, safe. Otherwise, see 3
+        3. If dangerous, take evasive action (shield, teleport, move, nothing)
+        4. If we don't move for several frames due to turret, kill turret.
+     */
 }

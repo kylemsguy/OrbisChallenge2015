@@ -482,15 +482,16 @@ public class AStar {
         }
 
         public Node at(int x, int y){
+            System.err.println(x+ " "+ y);
             if(x < 0)
-                x += width * (Math.abs(x) / width);
+                x += width;
             else if(x >= width)
-                x -= width * (x / width);
+                x -= width;
 
             if(y < 0)
-                y += height * (Math.abs(y) / height);
+                y += height;
             else if(y >= height)
-                y -= height * (y / height);
+                y -= height;
 
             return map.get(x).get(y);
         }
