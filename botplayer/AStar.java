@@ -18,12 +18,18 @@ public class AStar {
     private List<Node> closedSet = new ArrayList<>();
     private Direction currentDirection;
 
+    private int width;
+    private int height;
+
     public AStar(Heuristic heuristic, Queue<Move> moveQueue){
         this.heuristic = heuristic;
         this.moveQueue = moveQueue;
     }
 
     public void setupMap(Gameboard gameboard){
+        width = gameboard.getWidth();
+        height = gameboard.getHeight();
+
         setupObstacles(gameboard);
         map = new ArrayList<>();
 
@@ -66,7 +72,7 @@ public class AStar {
      * @param height
      * @return
      */
-    public List<Node> findNeighbours(Node node, int width, int height){
+    public List<Node> findNeighbours(Node node){
         List<Node> neighbours = new ArrayList<>();
         final int x = node.getX();
         final int y = node.getY();
@@ -123,7 +129,7 @@ public class AStar {
         return false;
     }
 
-    public boolean isFacing(Direction direction, Point source, Point target, int width, int height){
+    public boolean isFacing(Direction direction, Point source, Point target){
         if(direction == Direction.UP){
             System.out.println("Here1");
             // checking above
@@ -163,7 +169,7 @@ public class AStar {
         return false;
     }
 
-    public Direction getFacing(Node source, Node target, int width, int height){
+    public Direction getFacing(Node source, Node target){
         if(source.x > target.x || (source.x == 0 && target.x == width - 1)){
             // facing left
             return Direction.LEFT;
@@ -204,11 +210,16 @@ public class AStar {
         // while we haven't reached the goal yet
         while(openSet.size() > 0){
             boolean neighbourBetter;
-            // get the best node from the open set
+            // get the best node from the open set and add to closed set
             Node current = openSet.remove();
             closedSet.add(current);
 
-            List<Node> neighbours = findNeighbours(current, width, height);
+            // Check if we have reached the target. If so, we are done!
+            if(end.equals(current.getCoords())){
+                reconstructPath(current, width, height);
+            }
+
+            List<Node> neighbours = findNeighbours(current);
 
             for(Node neighbour : neighbours){
                 // skip. we've been here before
@@ -217,10 +228,10 @@ public class AStar {
 
                 if(!neighbour.isObstacle()){
                     // calculate the cost to get to this neighbour in our tenative path
-                    Direction prevDirection = getFacing(current.getParent(), current, width, height);
+                    Direction prevDirection = getFacing(current.getParent(), current);
                     int cost = (int) current.getDistanceFromStart() +
                             (isFacing(prevDirection, current.getCoords(),
-                                    neighbour.getCoords(), width, height) ? 1 : 2);
+                                    neighbour.getCoords()) ? 1 : 2);
 
                     // add neighbour to open list if not there
                     if(!openSet.contains(neighbour)){
@@ -244,15 +255,27 @@ public class AStar {
 
             }
         }
-        addMovesToQueue();
     }
 
-    private void addMovesToQueue(){
-        
+    /**
+     * Reconstructs the path and turns into a set of moves.
+     * @param end
+     */
+    private void reconstructPath(Node end){
+        List<Move> moveList = new ArrayList<>();
+        Node node = end;
+        Node parent;
 
+        while((parent = node.getParent()) != null){
+            getFacing(parent, node)
+        }
     }
 
-    private static class Node implements Comparable<Node>{
+    public List<List<Node>> getMap(){
+        return map;
+    }
+
+    public static class Node implements Comparable<Node>{
         private Node parent;
         private List<Node> neighbours;
         private boolean visited;
@@ -263,6 +286,7 @@ public class AStar {
         private boolean isObstacle;
         private boolean isStart;
         private boolean isGoal;
+        private boolean isTurret;
 
         private Node north;
         private Node south;
@@ -312,6 +336,14 @@ public class AStar {
             } else {
                 return 0;
             }
+        }
+
+        public boolean isTurret() {
+            return isTurret;
+        }
+
+        public void setIsTurret(boolean isTurret) {
+            this.isTurret = isTurret;
         }
 
         public Node getNorth() {
