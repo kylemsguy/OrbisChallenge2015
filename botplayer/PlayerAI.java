@@ -1,4 +1,5 @@
 import com.orbischallenge.game.enums.*;
+import com.orbischallenge.game.enums.Direction;
 
 import java.util.*;
 import java.awt.Point;
@@ -62,10 +63,9 @@ public class PlayerAI extends ClientAI {
         ArrayList turrets = gameboard.getTurrets();
         int Xcoordinate = player.getX();
         int Ycoordinate = player.getY();
-        int i;
         boolean outOfRange = true;
-        for (i = 0; i < turrets.size(); i++) {
-            if (Math.abs(turrets[i].x - Xcoordinate < 5 || Math.abs(turrets[i].y - Ycoordinate < 5) {
+        for (int i = 0; i < turrets.size(); i++) {
+            if (Math.abs(turrets.get(i).x - Xcoordinate < 5 || Math.abs(turrets.get(i).y - Ycoordinate < 5))) {
                 outOfRange = false;
                 return outOfRange;
             }
@@ -78,38 +78,47 @@ public class PlayerAI extends ClientAI {
     public ArrayList checkForTurrets() {
         int Xcoordinate = player.getX();
         int Ycoordinate = player.getY();
-        ArrayList<String> directions = new ArrayList<String>(Arrays.asList("left", "right", "up", "down"));
+        ArrayList<Direction> directions = new ArrayList<>();
+        directions.add(Direction.UP);
+        directions.add(Direction.LEFT);
+        directions.add(Direction.DOWN);
+        directions.add(Direction.RIGHT);
+        checkForDiagonalTurrets(directions);
+
+    }
+
+    public ArrayList<Direction> checkForDiagonalTurrets(ArrayList<Direction> directions) {
 
         if (isTurretAtTile(Xcoordinate + 1, Ycoordinate + 1)) {
-            directions.remove("right");
-            directions.remove("up");
+            directions.remove(Directions.RIGHT);
+            directions.remove(Directions.UP);
         }
 
         if (isTurretAtTile(Xcoordinate -1, Ycoordinate + 1)) {
-            if (directions.contains("up")) {
-                directions.remove("up");
+            if (directions.contains(Directions.UP)) {
+                directions.remove(Directions.UP);
             }
-            directions.remove("left");
+            directions.remove(Directions.LEFT);
         }
 
         if (isTurretAtTile(Xcoordinate + 1, Ycoordinate - 1)) {
-            if (directions.contains("right")) {
-                directions.remove("right");
+            if (directions.contains(Directions.RIGHT)) {
+                directions.remove(Directions.RIGHT);
             }
-            directions.remove("down");
+            directions.remove(Directions.DOWN);
         }
 
         if (isTurretAtTile(Xcoordinate - 1, Ycoordinate - 1)) {
-            if (directions.contains("left")) {
-                directions.remove("left");
+            if (directions.contains(Directions.LEFT)) {
+                directions.remove(Directions.LEFT);
             }
 
-            if (directions.contains("down")) {
-                directions.remove("down");
+            if (directions.contains(Directions.DOWN)) {
+                directions.remove(Directions.DOWN);
             }
         }
 
-        return directions;
+        return revised_directions;
     }
 
     public boolean inLineOfSight(int opponentY, int playerY, int opponentX, int playerX) {
@@ -129,8 +138,7 @@ public class PlayerAI extends ClientAI {
 /* getNumberofTeleportLocations is actually already done in the gameboard class */
     public int getNumberOfTeleportLocations() {
         ArrayList TeleportLocations = gameboard.getTeleportLocations();
-        int i;
-        int numLocations;
+        int numLocations = 0;
         for (int i = 0; i < TeleportLocations.size(); i++) {
             numLocations += 1;
         }
