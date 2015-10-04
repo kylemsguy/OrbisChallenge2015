@@ -1,6 +1,7 @@
 import com.orbischallenge.engine.gameboard.*;
 import com.orbischallenge.game.enums.*;
 import com.orbischallenge.game.enums.Direction;
+import com.orbischallenge.game.enums.Move;
 import sun.reflect.generics.tree.Tree;
 
 import java.awt.*;
@@ -202,6 +203,7 @@ public class AStar {
 
         // while we haven't reached the goal yet
         while(openSet.size() > 0){
+            boolean neighbourBetter;
             // get the best node from the open set
             Node current = openSet.remove();
             closedSet.add(current);
@@ -215,16 +217,39 @@ public class AStar {
 
                 if(!neighbour.isObstacle()){
                     // calculate the cost to get to this neighbour in our tenative path
-                    //int cost = current.getDistanceFromStart() + isFacing() ? 1 : 2;
+                    Direction prevDirection = getFacing(current.getParent(), current, width, height);
+                    int cost = (int) current.getDistanceFromStart() +
+                            (isFacing(prevDirection, current.getCoords(),
+                                    neighbour.getCoords(), width, height) ? 1 : 2);
+
+                    // add neighbour to open list if not there
+                    if(!openSet.contains(neighbour)){
+                        openSet.add(neighbour);
+                        neighbourBetter = true;
+                    }
+                    else if(cost < current.getDistanceFromStart()){
+                        neighbourBetter = true;
+                    }
+                    else
+                        neighbourBetter = false;
+
+                    // set neighbour parameters if better
+                    if(neighbourBetter){
+                        neighbour.setParent(current);
+                        neighbour.setDistanceFromStart(cost);
+                        neighbour.setHeuristicDistanceFromGoal(
+                                heuristic.getDistance(neighbour.getCoords(), end, width, height));
+                    }
                 }
 
             }
-
         }
+        addMovesToQueue();
     }
 
-    private List<Move> getMoves(){
-        return null;
+    private void addMovesToQueue(){
+        
+
     }
 
     private static class Node implements Comparable<Node>{
