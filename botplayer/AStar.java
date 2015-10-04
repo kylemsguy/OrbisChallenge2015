@@ -6,7 +6,7 @@ public class AStar {
     private Queue<Move> moveQueue;
     private Heuristic heuristic;
 
-    private Map map;
+    private GameGrid map;
 
     private PriorityQueue<Node> openSet = new PriorityQueue<>();
     private List<Node> closedSet = new ArrayList<>();
@@ -39,11 +39,11 @@ public class AStar {
         walls = gameboard.getWalls();
         width = gameboard.getWidth();
         height = gameboard.getHeight();
-        map = new Map(width, height);
+        map = new GameGrid(width, height);
         for(int i = 0; i < gameboard.getWidth(); i++){
             List<Node> columns = new ArrayList<>();
             for(int ii = 0; ii < gameboard.getHeight(); ii++){
-                Node newNode = new Node(i, ii, false, 0, isObstacle(new Point(i, ii)), false, false);
+                Node newNode = new Node(i, ii, false, 0, false, false, false);
                 setupObstacle(i, ii, newNode);
                 columns.add(newNode);
             }
@@ -280,7 +280,7 @@ public class AStar {
             return null;
         }
     }
-    
+
     public boolean isTempObstacle(Node node){
         if(tempWalls == null)
             return false;
@@ -413,7 +413,7 @@ public class AStar {
         }
     }
 
-    public Map getMap(){
+    public GameGrid getMap(){
         return map;
     }
 
@@ -429,12 +429,13 @@ public class AStar {
         return this.heuristic;
     }
 
-    public static class Map{
+    public static class GameGrid {
         private List<List<Node>> map;
         private int width;
         private int height;
 
-        public Map(int width, int height){
+        public GameGrid(int width, int height){
+            this.map = new ArrayList<>();
             this.width = width;
             this.height = height;
         }
