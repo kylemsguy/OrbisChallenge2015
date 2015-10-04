@@ -260,19 +260,28 @@ public class AStar {
     public Direction getFacing(Node source, Node target, Direction initialDirection){
         if(source == null)
             return initialDirection;
-        if(source.x > target.x || (source.x == 0 && target.x == width - 1)){
+        if(source.x == 0 && target.x == width - 1){
+            return Direction.LEFT;
+        }
+        else if(source.x == width - 1 && target.x == 0)
+            return Direction.RIGHT;
+        else if(source.y == 0 && target.y == height - 1)
+            return Direction.UP;
+        else if(source.y == height - 1 && target.y == 0)
+            return Direction.DOWN;
+        else if(source.x > target.x){
             // facing left
             return Direction.LEFT;
         }
-        else if(source.x < target.x || (source.x == width - 1 && target.x == 0)){
+        else if(source.x < target.x){
             // facing right
             return Direction.RIGHT;
         }
-        else if(source.y > target.y || (source.y == 0 && target.y == height - 1)){
+        else if(source.y > target.y){
             // facing up
             return Direction.UP;
         }
-        else if(source.y < target.y || (source.y == height - 1 && target.y == 0)){
+        else if(source.y < target.y){
             return Direction.DOWN;
         }
         else{
