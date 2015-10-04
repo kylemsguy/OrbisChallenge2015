@@ -1,5 +1,6 @@
 import com.orbischallenge.engine.gameboard.*;
 import com.orbischallenge.game.enums.*;
+import com.orbischallenge.game.enums.Direction;
 import sun.reflect.generics.tree.Tree;
 
 import java.awt.*;
@@ -25,7 +26,7 @@ public class AStar {
         setupObstacles(gameboard);
         map = new ArrayList<>();
 
-        for(int i = 0; i < gameboard.getWidth()){
+        for(int i = 0; i < gameboard.getWidth(); i++){
             List<Node> columns = new ArrayList<>();
             for(int ii = 0; i < gameboard.getHeight(); i++){
                 columns.add(new Node(i, ii, false, 0, isObstacle(new Point(i, ii)), false, false));
@@ -122,7 +123,8 @@ public class AStar {
     }
 
     public boolean isFacing(Direction direction, Point source, Point target, int width, int height){
-        if(source.x != target.x){
+        if(direction == Direction.UP){
+            System.out.println("Here1");
             // checking above
             if(source.y == 0 && target.y == height - 1){
                 return true;
@@ -144,22 +146,24 @@ public class AStar {
         // TODO check AAAAA
         else if(direction == Direction.LEFT){
             // checking left
-            if(source.x == 0 && target.x == width - 1)
+            if(source.x > target.x)
                 return true;
-
-            else if(source.x > target.x)
+            else if(source.x == 0 && target.x == width - 1)
                 return true;
-
         }
         else if(direction == Direction.RIGHT){
             // checking right
-            if(source.x == width - 1 && target.x == 0)
+            if(source.x < target.x)
                 return true;
-            else if(source.x < target.x)
+            else if(source.x == width - 1 && target.x == 0)
                 return true;
         }
 
         return false;
+    }
+
+    public Direction getFacing(Node source, Node target){
+        return null;
     }
 
     /**
@@ -194,7 +198,7 @@ public class AStar {
 
                 if(!neighbour.isObstacle()){
                     // calculate the cost to get to this neighbour in our tenative path
-                    int cost = current.getDistanceFromStart() + isFacing() ? 1 : 2;
+                    //int cost = current.getDistanceFromStart() + isFacing() ? 1 : 2;
                 }
 
             }
@@ -438,7 +442,7 @@ public class AStar {
             int dx_wrap = width - 1 - dx_normal;
             int dy_wrap = height - 1 - dy_normal;
 
-            return Math.min(dx_normal, dx_wrap) + min(dy_normal, dy_wrap) + 1; // + 1 due to the turning required
+            return Math.min(dx_normal, dx_wrap) + Math.min(dy_normal, dy_wrap) + 1; // + 1 due to the turning required
 		}
 	}
 }
