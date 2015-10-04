@@ -89,6 +89,10 @@ public class AStar {
      * @return danger rating
      */
     public int isDangerous(Point point, Gameboard gameboard){
+        boolean stopRight = false;
+        boolean stopLeft = false;
+        boolean stopUp = false;
+        boolean stopDown = false;
         int tenativeDanger = 0;
         // check for danger
         for(int i = 1; i <= 4; i++){
@@ -96,16 +100,34 @@ public class AStar {
                 int newX = point.x;
                 int newY = point.y;
 
-                if (ii == 0)
+                if (ii == 0 && !stopRight)
                     newX += i; // right
-                else if (ii == 1)
+                else if (ii == 1 && !stopLeft)
                     newX -= i; // left
-                else if (ii == 2)
+                else if (ii == 2 && !stopDown)
                     newY += i; // down
-                else if (ii == 3)
+                else if (ii == 3 && !stopUp)
                     newY -= i; // up
+                else
+                    break; // nothing left to do
 
                 Node node = map.at(newX, newY);
+
+                if(node.isObstacle() && node.isTurret()){
+                    switch(ii){
+                        case 0:
+                            stopRight = true;
+                            break;
+                        case 1:
+                            stopLeft = true;
+                            break;
+                        case 2:
+                            stopDown = true;
+                            break;
+                        case 3:
+                            stopUp = true;
+                    }
+                }
 
                 // check bullets in all directions (only two spaces)
                 if (i == 1 || i == 2) {
