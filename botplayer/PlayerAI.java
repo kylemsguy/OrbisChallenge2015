@@ -34,8 +34,8 @@ public class PlayerAI extends ClientAI {
     * before moving, or if we can simply move forward.  I set that as Move.FACE_DOWN for now. */
 
 
-    public void checkForOpponent() {
-        if (opponent.laserCount() > 0 && inLineOfSight(opponent.getX(), player.getX())) {
+    public void checkForOpponent(Player player, Opponent opponent) {
+        if (opponent.getLaserCount() > 0 && inLineOfSight(player.getX(), player.getY(), opponent.getX(), opponent.getY())) {
             if (player.getShieldCount() > 0) {
                 moveQueue.add(Move.SHIELD);
 
@@ -45,7 +45,7 @@ public class PlayerAI extends ClientAI {
                 if (inRange(opponent.getY(), player.getY())) {
                     moveQueue.add(Move.SHOOT);
                 } else {
-                    if (inLineOfSight(opponent.getY, player.getY)) {
+                    if (inLineOfSight(player.getX(), player.getY(), opponent.getX(), opponent.getY())) {
                         moveQueue.add(Move.FACE_DOWN);
                         moveQueue.add(Move.FORWARD);
                     }
@@ -54,18 +54,20 @@ public class PlayerAI extends ClientAI {
         }
     }
 
-    public Move chooseRandomDiretion(int maximum, int minimum) {
+    public Move chooseRandomDirection(int maximum, int minimum) {
         Random rn = new Random();
-        int directionNum = random.nextInt(maximum - minimum + 1) + minimum;
+        int directionNum = rn.nextInt(maximum - minimum + 1) + minimum;
+
+        return Move.NONE;
     }
 
-    public boolean turretsOutOfRange() {
-        ArrayList turrets = gameboard.getTurrets();
+    public boolean turretsOutOfRange(Gameboard gameboard, Player player) {
+        ArrayList<Turret> turrets = gameboard.getTurrets();
         int Xcoordinate = player.getX();
         int Ycoordinate = player.getY();
         boolean outOfRange = true;
         for (int i = 0; i < turrets.size(); i++) {
-            if (Math.abs(turrets.get(i).x - Xcoordinate < 5 || Math.abs(turrets.get(i).y - Ycoordinate < 5))) {
+            if (Math.abs(turrets.get(i).x - Xcoordinate) < 5 || Math.abs(turrets.get(i).y - Ycoordinate) < 5) {
                 outOfRange = false;
                 return outOfRange;
             }
@@ -129,7 +131,7 @@ public class PlayerAI extends ClientAI {
         }
     }
 
-    public boolean inLineOfSight(int opponentY, int playerY, int opponentX, int playerX) {
+    public boolean inLineOfSight(int playerX, int playerY, int opponentX, int opponentY) {
         if (opponentX == playerX || opponentY == playerY) {
             return true;
         }
@@ -188,6 +190,7 @@ public class PlayerAI extends ClientAI {
         } catch(MapOutOfBoundsException e){
             System.err.println("checkForDiagonalTurrets: MapOutOfBoundsException for no good reason");
         }
+        return false;  // TODO implement
     }
 
 	@Override
