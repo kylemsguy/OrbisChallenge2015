@@ -181,7 +181,7 @@ public class AStar {
         if(newY < 0)
             newY = height - 1;
 
-        Node north = map.get(newX).get(newY);
+        Node north = map.get(x).get(newY);
 
         newX = x + 1;
 
