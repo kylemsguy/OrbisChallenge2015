@@ -195,6 +195,7 @@ public class PlayerAI extends ClientAI {
 	public Move getMove(Gameboard gameboard, Opponent opponent, Player player) throws NoItemException, MapOutOfBoundsException {
         if(moveQueue.isEmpty()){
             pathfinder.setupMap(gameboard);
+            pathfinder.updateTurrets(gameboard);
             // find closest powerup
             List<PowerUp> powerUps = gameboard.getPowerUps();
 

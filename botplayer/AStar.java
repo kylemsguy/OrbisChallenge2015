@@ -5,63 +5,154 @@ import java.util.List;
 public class AStar {
     private Queue<Move> moveQueue;
     private Heuristic heuristic;
-    private List<List<Node>> map;
-    private List<Point> obstacles;
+
+    private Map map;
 
     private PriorityQueue<Node> openSet = new PriorityQueue<>();
     private List<Node> closedSet = new ArrayList<>();
     private Direction currentDirection;
 
+    private List<Turret> turrets;
+    private List<Wall> walls;
+    private List<Point> tempWalls;
+
     private int width;
     private int height;
+
+    private static final boolean DEBUG = true;
 
     public AStar(Heuristic heuristic, Queue<Move> moveQueue){
         this.heuristic = heuristic;
         this.moveQueue = moveQueue;
-        this.obstacles = new ArrayList<>();
     }
 
     private int debugPrintcalls = 1;
     private void debugPrint(){
-        System.out.println("Call number" + debugPrintcalls++);
+        if(DEBUG)
+            System.out.println("Call number" + debugPrintcalls++);
     }
 
     public void setupMap(Gameboard gameboard){
         if(map != null)
             return;
+        turrets = gameboard.getTurrets();
+        walls = gameboard.getWalls();
         width = gameboard.getWidth();
         height = gameboard.getHeight();
-        setupObstacles(gameboard);
-        map = new ArrayList<>();
+        map = new Map(width, height);
         for(int i = 0; i < gameboard.getWidth(); i++){
             List<Node> columns = new ArrayList<>();
             for(int ii = 0; ii < gameboard.getHeight(); ii++){
-                columns.add(new Node(i, ii, false, 0, isObstacle(new Point(i, ii)), false, false));
+                Node newNode = new Node(i, ii, false, 0, isObstacle(new Point(i, ii)), false, false);
+                setupObstacle(i, ii, newNode);
+                columns.add(newNode);
             }
             map.add(columns);
         }
     }
 
-    private void setupObstacles(Gameboard gameboard){
-        obstacles.clear();
-        List<Turret> turrets = gameboard.getTurrets();
-        List<Wall> walls = gameboard.getWalls();
-
+    private void setupObstacle(int x, int y, Node newNode){
         for(Turret turret : turrets){
-            obstacles.add(new Point(turret.x, turret.y));
+            if(turret.x == x && turret.y == y){
+                newNode.setIsTurret(true);
+                newNode.setIsObstacle(true);
+                break;
+            }
         }
 
         for(Wall wall : walls){
-            obstacles.add(new Point(wall.x, wall.y));
+            if(wall.x == x && wall.y == y){
+                newNode.setIsObstacle(true);
+                break;
+            }
+        }
+
+    }
+
+    public void updateTurrets(Gameboard board){
+        this.turrets = board.getTurrets();
+        for(Turret turret : turrets){
+            Node turretNode = map.at(turret.x, turret.y);
+            turretNode.setTurret(turret);
+            if(turret.isDead()){
+                // Dead turrets are still walls :D
+                turretNode.setIsTurret(false);
+            }
         }
     }
 
-    public boolean isObstacle(Point point){
-        for(Point obstacle : obstacles){
-            if(point.equals(obstacle))
-                return true;
+    /**
+     * Returns a danger rating on the scale of 0-2 where 0 is safe and 2 is get hit if you go here
+     * next turn.
+     * @param point the point on the board
+     * @param gameboard the gameboard itself
+     * @return danger rating
+     */
+    public int isDangerous(Point point, Gameboard gameboard){
+        int tenativeDanger = 0;
+        // check for danger
+        for(int i = 1; i <= 4; i++){
+            for(int ii = 0; ii < 4; ii++) {
+                int newX = point.x;
+                int newY = point.y;
+
+                if (ii == 0)
+                    newX += i; // right
+                else if (ii == 1)
+                    newX -= i; // left
+                else if (ii == 2)
+                    newY += i; // down
+                else if (ii == 3)
+                    newY -= i; // up
+
+                Node node = map.at(newX, newY);
+
+                // check bullets in all directions (only two spaces)
+                if (i == 1 || i == 2) {
+                    try {
+                        List<Bullet> bullets = gameboard.getBulletsAtTile(node.getX(), node.getY());
+
+                        for (Bullet bullet : bullets) {
+                            if (bullet.x == node.getX() && bullet.y == node.getY()) {
+                                if((ii == 0 && bullet.getDirection() == Direction.LEFT)
+                                        || (ii == 1 && bullet.getDirection() == Direction.RIGHT)
+                                        || (ii == 2 && bullet.getDirection() == Direction.UP)
+                                        || (ii == 3 && bullet.getDirection() == Direction.DOWN)) {
+                                    int dangerLevel = 3 - i; // danger is 2 if i==1, danger is 1 if i==2
+                                    if (dangerLevel > tenativeDanger)
+                                        tenativeDanger = dangerLevel;
+                                }
+                            }
+                        }
+                    } catch (MapOutOfBoundsException e) {
+                        System.err.println("isDangerous: Something went very wrong with the coordinates O_O");
+                    }
+                }
+
+                // check turrets in all directions
+                if (node.isTurret()) {
+                    Turret turret = node.getTurret();
+
+                    if (turret.isFiringNextTurn() || turret.didFire()) {
+                        if (tenativeDanger < 2)
+                            tenativeDanger = 2;
+                    } else {
+                        if (tenativeDanger < 1)
+                            tenativeDanger = 1;
+                    }
+
+                }
+            }
+
         }
-        return false;
+
+        return tenativeDanger;
+    }
+
+
+    public boolean isObstacle(Point point){
+        Node node = map.get(point.x).get(point.y);
+        return node.isObstacle();
     }
 
 
@@ -190,6 +281,14 @@ public class AStar {
         }
     }
 
+    public boolean isTempObstacle(Node node){
+        for(Point point : tempWalls){
+            if(node.x == point.x && node.y == point.y)
+                return true;
+        }
+        return false;
+    }
+
     /**
      * Uses A* to find a path from A to B. Ignores bullets, players and lasers,
      * and anything else dynamic.
@@ -199,6 +298,8 @@ public class AStar {
      * @param board
      */
     public void findPath(Point start, Point end, Gameboard board, Direction initialDirection){
+        if(DEBUG)
+            System.out.println("Start position: " + start.toString());
         int width = board.getWidth();
         int height = board.getHeight();
         Node startNode = new Node(start.x, start.y, false, 0, false, true, false);
@@ -214,6 +315,9 @@ public class AStar {
             Node current = openSet.remove();
             closedSet.add(current);
 
+            if(DEBUG)
+                System.out.println("Investigating node " + current.toString());
+
             // Check if we have reached the target. If so, we are done!
             if(end.equals(current.getCoords())){
                 reconstructPath(initialDirection, current);
@@ -226,7 +330,7 @@ public class AStar {
                 if(closedSet.contains(neighbour))
                     continue;
 
-                if(!neighbour.isObstacle()){
+                if(!neighbour.isObstacle() && !isTempObstacle(neighbour)){
                     // calculate the cost to get to this neighbour in our tenative path
                     Direction prevDirection = getFacing(current.getParent(), current, initialDirection);
                     int cost = (int) current.getDistanceFromStart() +
@@ -246,6 +350,8 @@ public class AStar {
 
                     // set neighbour parameters if better
                     if(neighbourBetter){
+                        if(DEBUG)
+                            System.out.println("Adding " + current.toString() + " as parent of " + neighbour.toString());
                         neighbour.setParent(current);
                         neighbour.setDistanceFromStart(cost);
                         neighbour.setHeuristicDistanceFromGoal(
@@ -271,11 +377,16 @@ public class AStar {
         Direction facing;
 
         while((parent = node.getParent()) != null){
+            if(DEBUG)
+                System.out.println("Connecting parent " + parent.toString() + " to " + node.toString());
             facing = getFacing(parent, node, initialDirection);
-            moveList.add(Move.FORWARD);
+            System.out.println(facing.toString());
             if(facing != previousFacing){
+                System.out.println("Change direction from " + facing + " to " + previousFacing);
                 moveList.add(Direction.directionToMovement(previousFacing));
+                System.out.println("Just added " + moveList.get(moveList.size() - 1));
             }
+            moveList.add(Move.FORWARD);
 
             // update pointers
             node = parent;
@@ -287,21 +398,61 @@ public class AStar {
             moveList.add(Direction.directionToMovement(previousFacing));
         }
 
-        System.out.println("Printing new move plan: ");
+        if(DEBUG)
+            System.out.println("Printing new move plan: ");
 
         // Add the moves to the queue
         for(int i = moveList.size() - 1; i >= 0; i--){
             moveQueue.add(moveList.get(i));
-            System.out.println(moveList.get(i));
+
+            if(DEBUG)
+                System.out.println(moveList.get(i));
         }
     }
 
-    public List<List<Node>> getMap(){
+    public Map getMap(){
         return map;
+    }
+
+    public void setTempWalls(List<Point> tempWalls){
+        this.tempWalls = tempWalls;
     }
 
     public Heuristic getHeuristic(){
         return this.heuristic;
+    }
+
+    public static class Map{
+        private List<List<Node>> map;
+        private int width;
+        private int height;
+
+        public Map(int width, int height){
+            this.width = width;
+            this.height = height;
+        }
+
+        public void add(List<Node> column){
+            map.add(column);
+        }
+
+        public List<Node> get(int index){
+            return map.get(index);
+        }
+
+        public Node at(int x, int y){
+            if(x < 0)
+                x += width * (Math.abs(x) / width);
+            else if(x >= width)
+                x -= width * (x / width);
+
+            if(y < 0)
+                y += height * (Math.abs(y) / height);
+            else if(y >= height)
+                y -= height * (y / height);
+
+            return map.get(x).get(y);
+        }
     }
 
     public static class Node implements Comparable<Node>{
@@ -317,10 +468,7 @@ public class AStar {
         private boolean isGoal;
         private boolean isTurret;
 
-        private Node north;
-        private Node south;
-        private Node east;
-        private Node west;
+        private Turret turret;
 
         public Node(int x, int y){
             neighbours = new ArrayList<>();
@@ -367,6 +515,18 @@ public class AStar {
             }
         }
 
+        /**
+         *  Getters and Setters
+         */
+
+        public Turret getTurret(){
+            return turret;
+        }
+
+        public void setTurret(Turret turret){
+            this.turret = turret;
+        }
+
         public boolean isTurret() {
             return isTurret;
         }
@@ -374,62 +534,6 @@ public class AStar {
         public void setIsTurret(boolean isTurret) {
             this.isTurret = isTurret;
         }
-
-        public Node getNorth() {
-            return north;
-        }
-
-        public void setNorth(Node north) {
-            // replace old node in the neighbours list
-            if(neighbours.contains(north))
-                neighbours.remove(north);
-            neighbours.add(north);
-
-            this.north = north;
-        }
-
-        public Node getSouth() {
-            return south;
-        }
-
-        public void setSouth(Node south) {
-            // replace old node in the neighbours list
-            if(neighbours.contains(south))
-                neighbours.remove(south);
-            neighbours.add(south);
-
-            this.south = south;
-        }
-
-        public Node getEast() {
-            return east;
-        }
-
-        public void setEast(Node east) {
-            // replace old node in the neighbours list
-            if(neighbours.contains(east))
-                neighbours.remove(east);
-            neighbours.add(east);
-
-            this.east = east;
-        }
-
-        public Node getWest() {
-            return west;
-        }
-
-        public void setWest(Node west) {
-            // replace old node in the neighbours list
-            if(neighbours.contains(west))
-                neighbours.remove(west);
-            neighbours.add(west);
-
-            this.west = west;
-        }
-
-        /**
-         *  Getters and Setters
-         */
 
         public Node getParent() {
             return parent;
@@ -520,7 +624,10 @@ public class AStar {
             this.isGoal = isGoal;
         }
 
-
+        @Override
+        public String toString() {
+            return "Node at (" + this.x + ", " + this.y + ")";
+        }
     }
 
     public interface Heuristic{
