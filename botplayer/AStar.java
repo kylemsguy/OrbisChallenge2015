@@ -472,6 +472,10 @@ public class AStar {
 
             return map.get(x).get(y);
         }
+
+        public Node at(Point pos){
+            return at(pos.x, pos.y);
+        }
     }
 
     public static class Node implements Comparable<Node>{
