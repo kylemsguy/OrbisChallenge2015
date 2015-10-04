@@ -280,8 +280,11 @@ public class AStar {
             return null;
         }
     }
-
+    
     public boolean isTempObstacle(Node node){
+        if(tempWalls == null)
+            return false;
+
         for(Point point : tempWalls){
             if(node.x == point.x && node.y == point.y)
                 return true;
@@ -416,6 +419,10 @@ public class AStar {
 
     public void setTempWalls(List<Point> tempWalls){
         this.tempWalls = tempWalls;
+    }
+
+    public void clearTempWalls(){
+        this.tempWalls = null;
     }
 
     public Heuristic getHeuristic(){
