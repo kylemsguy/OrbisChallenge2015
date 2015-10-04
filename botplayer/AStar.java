@@ -150,7 +150,6 @@ public class AStar {
             }
 
         }
-        // TODO check AAAAA
         else if(direction == Direction.LEFT){
             // checking left
             if(source.x > target.x)
