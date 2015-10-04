@@ -1,3 +1,4 @@
+import com.orbischallenge.engine.gameboard.*;
 import com.orbischallenge.game.client.gameObjects.*;
 import com.orbischallenge.game.enums.*;
 import com.orbischallenge.game.enums.Direction;
@@ -74,7 +75,7 @@ public class PlayerAI extends ClientAI {
 
     }
 
-    public ArrayList checkForTurrets() {
+    public ArrayList<Direction> checkForTurrets(Player player, Gameboard gameboard) {
         int Xcoordinate = player.getX();
         int Ycoordinate = player.getY();
         ArrayList<Direction> directions = new ArrayList<>();
@@ -82,11 +83,13 @@ public class PlayerAI extends ClientAI {
         directions.add(Direction.LEFT);
         directions.add(Direction.DOWN);
         directions.add(Direction.RIGHT);
-        checkForDiagonalTurrets(directions);
+        checkForDiagonalTurrets(directions, player, gameboard);
+
+        return directions;
 
     }
 
-    public ArrayList<Direction> checkForDiagonalTurrets(ArrayList<Direction> directions, Player player, Gameboard gameboard) {
+    public void checkForDiagonalTurrets(ArrayList<Direction> directions, Player player, Gameboard gameboard) {
 
         int Xcoordinate = player.getX();
         int Ycoordinate = player.getY();
@@ -122,10 +125,8 @@ public class PlayerAI extends ClientAI {
             }
         } catch (MapOutOfBoundsException e){
             // SHOULD NEVER HAPPEN OAO
-            System.out.println("checkForDiagonalTurrets: MapOutOfBoundsException for no good reason");
+            System.err.println("checkForDiagonalTurrets: MapOutOfBoundsException for no good reason");
         }
-
-        return revised_directions;
     }
 
     public boolean inLineOfSight(int opponentY, int playerY, int opponentX, int playerX) {
@@ -143,7 +144,7 @@ public class PlayerAI extends ClientAI {
     }
 
 /* getNumberofTeleportLocations is actually already done in the gameboard class */
-    public int getNumberOfTeleportLocations() {
+    public int getNumberOfTeleportLocations(Gameboard gameboard) {
         ArrayList TeleportLocations = gameboard.getTeleportLocations();
         int numLocations = 0;
         for (int i = 0; i < TeleportLocations.size(); i++) {
@@ -154,32 +155,38 @@ public class PlayerAI extends ClientAI {
     }
 
     public boolean checkForDiagonalTurrets(int playerXCoordinate, int playerYCoordinate, Gameboard gameboard) {
-        if (gameboard.isTurretAtTile(playerXCoordinate + 1, playerYCoordinate + 1)) {
-            if (gameboard.getTurretAtTile(playerXCoordinate + 1, playerYCoordinate + 1).isFiringNextTurn() == false) {
+        try {
+            if (gameboard.isTurretAtTile(playerXCoordinate + 1, playerYCoordinate + 1)) {
+                if (gameboard.getTurretAtTile(playerXCoordinate + 1, playerYCoordinate + 1).isFiringNextTurn() == false) {
+
+                }
 
             }
 
-        }
+            if (gameboard.isTurretAtTile(playerXCoordinate + 1, playerYCoordinate - 1)) {
+                if (gameboard.getTurretAtTile(playerXCoordinate + 1, playerYCoordinate - 1).isFiringNextTurn() == false) {
 
-        if (gameboard.isTurretAtTile(playerXCoordinate + 1, playerYCoordinate - 1)) {
-            if (gameboard.getTurretAtTile(playerXCoordinate + 1, playerYCoordinate - 1).isFiringNextTurn() == false) {
-
-            }
-
-        }
-
-        if (gameboard.isTurretAtTile(playerXCoordinate - 1, playerYCoordinate + 1)) {
-            if (gameboard.getTurretAtTile(playerXCoordinate - 1, playerYCoordinate + 1).isFiringNextTurn() == false) {
+                }
 
             }
 
-        }
+            if (gameboard.isTurretAtTile(playerXCoordinate - 1, playerYCoordinate + 1)) {
+                if (gameboard.getTurretAtTile(playerXCoordinate - 1, playerYCoordinate + 1).isFiringNextTurn() == false) {
 
-        if (gameboard.isTurretAtTile(playerXCoordinate - 1, playerYCoordinate - 1)) {
-            if (gameboard.getTurretAtTile(playerXCoordinate - 1, playerYCoordinate - 1).isFiringNextTurn() == false) {
+                }
 
             }
 
+            if (gameboard.isTurretAtTile(playerXCoordinate - 1, playerYCoordinate - 1)) {
+                if (gameboard.getTurretAtTile(playerXCoordinate - 1, playerYCoordinate - 1).isFiringNextTurn() == false) {
+
+                }
+
+            }
+        } catch(NoItemException e){
+            System.err.println("checkForDiagonalTurrets: NoItemException even though we checked O_O");
+        } catch(MapOutOfBoundsException e){
+            System.err.println("checkForDiagonalTurrets: MapOutOfBoundsException for no good reason");
         }
     }
 
