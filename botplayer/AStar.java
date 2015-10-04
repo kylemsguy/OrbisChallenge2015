@@ -301,8 +301,10 @@ public class AStar {
      * @param board
      */
     public void findPath(Point start, Point end, Gameboard board, Direction initialDirection){
-        if(DEBUG)
+        if(DEBUG) {
             System.out.println("Start position: " + start.toString());
+            System.out.println("Target position: " + end.toString());
+        }
         int width = board.getWidth();
         int height = board.getHeight();
         Node startNode = new Node(start.x, start.y, false, 0, false, true, false);
