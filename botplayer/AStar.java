@@ -162,8 +162,25 @@ public class AStar {
         return false;
     }
 
-    public Direction getFacing(Node source, Node target){
-        return null;
+    public Direction getFacing(Node source, Node target, int width, int height){
+        if(source.x > target.x || (source.x == 0 && target.x == width - 1)){
+            // facing left
+            return Direction.LEFT;
+        }
+        else if(source.x < target.x || (source.x == width - 1 && target.x == 0)){
+            // facing right
+            return Direction.RIGHT;
+        }
+        else if(source.y > target.y || (source.y == 0 && target.y == height - 1)){
+            // facing up
+            return Direction.UP;
+        }
+        else if(source.y < target.y || (source.y == height.y - 1 && target.y = 0)){
+            return Direction.DOWN;
+        }
+        else{
+            System.out.println("SOMETHING HAS GONE TERRIBLY WRONG!");
+        }
     }
 
     /**
