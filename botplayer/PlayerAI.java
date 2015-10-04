@@ -1,11 +1,10 @@
+import com.orbischallenge.game.client.gameObjects.*;
 import com.orbischallenge.game.enums.*;
 import com.orbischallenge.game.enums.Direction;
 
 import java.util.*;
 import java.awt.Point;
 import java.util.Random;
-
-pathfinder.getmap(); /* .get(1).get(2) gets the point (1, 2)) */
 
 public class PlayerAI extends ClientAI {
     //private AStar pathfinder = new AStar();
@@ -87,35 +86,43 @@ public class PlayerAI extends ClientAI {
 
     }
 
-    public ArrayList<Direction> checkForDiagonalTurrets(ArrayList<Direction> directions) {
+    public ArrayList<Direction> checkForDiagonalTurrets(ArrayList<Direction> directions, Player player, Gameboard gameboard) {
 
-        if (isTurretAtTile(Xcoordinate + 1, Ycoordinate + 1)) {
-            directions.remove(Directions.RIGHT);
-            directions.remove(Directions.UP);
-        }
+        int Xcoordinate = player.getX();
+        int Ycoordinate = player.getY();
 
-        if (isTurretAtTile(Xcoordinate -1, Ycoordinate + 1)) {
-            if (directions.contains(Directions.UP)) {
-                directions.remove(Directions.UP);
-            }
-            directions.remove(Directions.LEFT);
-        }
-
-        if (isTurretAtTile(Xcoordinate + 1, Ycoordinate - 1)) {
-            if (directions.contains(Directions.RIGHT)) {
-                directions.remove(Directions.RIGHT);
-            }
-            directions.remove(Directions.DOWN);
-        }
-
-        if (isTurretAtTile(Xcoordinate - 1, Ycoordinate - 1)) {
-            if (directions.contains(Directions.LEFT)) {
-                directions.remove(Directions.LEFT);
+        try {
+            if (gameboard.isTurretAtTile(Xcoordinate + 1, Ycoordinate + 1)) {
+                directions.remove(Direction.RIGHT);
+                directions.remove(Direction.UP);
             }
 
-            if (directions.contains(Directions.DOWN)) {
-                directions.remove(Directions.DOWN);
+            if (gameboard.isTurretAtTile(Xcoordinate - 1, Ycoordinate + 1)) {
+                if (directions.contains(Direction.UP)) {
+                    directions.remove(Direction.UP);
+                }
+                directions.remove(Direction.LEFT);
             }
+
+            if (gameboard.isTurretAtTile(Xcoordinate + 1, Ycoordinate - 1)) {
+                if (directions.contains(Direction.RIGHT)) {
+                    directions.remove(Direction.RIGHT);
+                }
+                directions.remove(Direction.DOWN);
+            }
+
+            if (gameboard.isTurretAtTile(Xcoordinate - 1, Ycoordinate - 1)) {
+                if (directions.contains(Direction.LEFT)) {
+                    directions.remove(Direction.LEFT);
+                }
+
+                if (directions.contains(Direction.DOWN)) {
+                    directions.remove(Direction.DOWN);
+                }
+            }
+        } catch (MapOutOfBoundsException e){
+            // SHOULD NEVER HAPPEN OAO
+            System.out.println("checkForDiagonalTurrets: MapOutOfBoundsException for no good reason");
         }
 
         return revised_directions;
@@ -146,30 +153,30 @@ public class PlayerAI extends ClientAI {
         return numLocations;
     }
 
-    public boolean checkForDiagonalTurrets(int playerXCoordinate, int playerYCoordinate) {
-        if (isTurretAtTile(playerXCoordinate + 1, playerYCoordinate + 1)) {
-            if (getTurretAtTile(playerXCoordinate + 1, playerYCoordinate + 1).isFiringNextTurn() == false) {
+    public boolean checkForDiagonalTurrets(int playerXCoordinate, int playerYCoordinate, Gameboard gameboard) {
+        if (gameboard.isTurretAtTile(playerXCoordinate + 1, playerYCoordinate + 1)) {
+            if (gameboard.getTurretAtTile(playerXCoordinate + 1, playerYCoordinate + 1).isFiringNextTurn() == false) {
 
             }
 
         }
 
-        if (isTurretAtTile(playerXCoordinate + 1, playerYCoordinate - 1)) {
-            if (getTurretAtTile(playerXCoordinate + 1, playerYCoordinate - 1).isFiringNextTurn() == false) {
+        if (gameboard.isTurretAtTile(playerXCoordinate + 1, playerYCoordinate - 1)) {
+            if (gameboard.getTurretAtTile(playerXCoordinate + 1, playerYCoordinate - 1).isFiringNextTurn() == false) {
 
             }
 
         }
 
-        if (isTurretAtTile(playerXCoordinate - 1, playerYCoordinate + 1)) {
-            if (getTurretAtTile(playerXCoordinate - 1, playerYCoordinate + 1).isFiringNextTurn() == false) {
+        if (gameboard.isTurretAtTile(playerXCoordinate - 1, playerYCoordinate + 1)) {
+            if (gameboard.getTurretAtTile(playerXCoordinate - 1, playerYCoordinate + 1).isFiringNextTurn() == false) {
 
             }
 
         }
 
-        if (isTurretAtTile(playerXCoordinate - 1, playerYCoordinate - 1)) {
-            if (getTurretAtTile(playerXCoordinate - 1, playerYCoordinate - 1).isFiringNextTurn() == false) {
+        if (gameboard.isTurretAtTile(playerXCoordinate - 1, playerYCoordinate - 1)) {
+            if (gameboard.getTurretAtTile(playerXCoordinate - 1, playerYCoordinate - 1).isFiringNextTurn() == false) {
 
             }
 
