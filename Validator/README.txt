@@ -10,7 +10,7 @@ tournament i.e. timing out, throwing errors, etc.
 Instructions for running the validator:
 
 1) Zip up your submission and rename it to "botplayer.zip"
-2) Place the zipped file in the "Submission" folder. Make sure there are no other files in this folder.
+2) Place the zipped file in the "Test" folder. Make sure there are no other files in this folder.
 2) Run the validate script and follow the on-screen prompts.
 
 Note: You cannot view the game during validation. You can however review
